@@ -23,6 +23,8 @@ def veiculos():
         if not data or not data.get('placa') or not data.get('modelo'):
             return jsonify({"msg": "Dados inválidos"}), 400
         
+        current_user = Usuario.query.filter_by(email=get_jwt_identity()).first()
+        print(current_user.id)
         new_veiculo = Veiculos(
             placa=data['placa'],
             modelo=data['modelo'],
