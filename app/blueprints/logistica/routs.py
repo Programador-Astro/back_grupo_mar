@@ -345,50 +345,54 @@ def cadastrar_cliente():
     else:
         # Significa que o cadastro será feito por JSON
         data = request.get_json()
-        if not data or not data.get('codigo_externo'):
-            return jsonify({"msg": "Dados inválidos"}), 400
-        
-        cliente = Cliente.query.filter_by(codigo_externo=data['codigo_externo']).first()
-        if cliente:
-            return jsonify({"msg": "Cliente já existe", "codigo_cliente": cliente.codigo_externo}), 400
-
-        novo_cliente = Cliente(
-            codigo_externo = data['codigo_externo'],
-            nome = data['nome'],
-            email=data['email'],
-            telefone_cadastro = data['tell_cadastro'],
-            telefone_motorista  = data['tell_motorista'],
-            usuario_id = payload['id'] 
-        )
-
-        db.session.add(novo_cliente)
-        db.session.flush()
-        if data['endereco_nota']:
-            lat, lng = geocodificar_google(data['endereco_nota'])
-            endereco_nota = Endereco_Adm(
-                cliente_id = novo_cliente.id,
-                endereco= data['endereco_nota'],
-                latitude = lat,
-                longitude = lng,
-                numero = data['numero'],
-                ponto_ref = data['ponto_ref'],
-                obs = data['obs']
-        )
-        db.session.add(endereco_nota)
-        if data['endereco_motorista']:
-            lat, lng = geocodificar_google(data['endereco_motorista'])
-            endereco_motorista = Endereco_Motorista(
-                cliente_id = novo_cliente.id,
-                endereco= data['endereco_motorista'],
-                latitude = lat,
-                longitude = lng,
-                numero = data['numero_motorista'],
-                ponto_ref = data['ponto_ref_motorista'],
-                obs = data['obs_motorista']
+        try:
+            if not data or not data.get('codigo_externo'):
+                return jsonify({"msg": "Dados inválidos"}), 400
+            
+            cliente = Cliente.query.filter_by(codigo_externo=data['codigo_externo']).first()
+            if cliente:
+                return jsonify({"msg": "Cliente já existe", "codigo_cliente": cliente.codigo_externo}), 400
+    
+            novo_cliente = Cliente(
+                codigo_externo = data['codigo_externo'],
+                nome = data['nome'],
+                email=data['email'],
+                telefone_cadastro = data['tell_cadastro'],
+                telefone_motorista  = data['tell_motorista'],
+                usuario_id = payload['id'] 
             )
-            db.session.add(endereco_motorista)
-        db.session.commit()
-        return jsonify({"msg": "Cliente cadastrado com sucesso"}), 200
+    
+            db.session.add(novo_cliente)
+            db.session.flush()
+            if data['endereco_nota']:
+                lat, lng = geocodificar_google(data['endereco_nota'])
+                endereco_nota = Endereco_Adm(
+                    cliente_id = novo_cliente.id,
+                    endereco= data['endereco_nota'],
+                    latitude = lat,
+                    longitude = lng,
+                    numero = data['numero'],
+                    ponto_ref = data['ponto_ref'],
+                    obs = data['obs']
+            )
+            db.session.add(endereco_nota)
+            if data['endereco_motorista']:
+                lat, lng = geocodificar_google(data['endereco_motorista'])
+                endereco_motorista = Endereco_Motorista(
+                    cliente_id = novo_cliente.id,
+                    endereco= data['endereco_motorista'],
+                    latitude = lat,
+                    longitude = lng,
+                    numero = data['numero_motorista'],
+                    ponto_ref = data['ponto_ref_motorista'],
+                    obs = data['obs_motorista']
+                )
+                db.session.add(endereco_motorista)
+            db.session.commit()
+            return jsonify({"msg": "Cliente cadastrado com sucesso"}), 200
+        except Exception as e:
+            print(f"Erro ao cadastrar cliente: {e}")
+            return jsonify({"msg": "Erro ao cadastrar cliente", "error": e}), 500
 @logistica_bp.route('/cadastrar_pedido', methods=['POST'])
 def cadastrar_pedido():
     
